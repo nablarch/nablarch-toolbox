@@ -1,0 +1,68 @@
+{
+  "verifiers": {
+    "TagUsageVerifier": {
+      "allowed_tags": {
+        "n:form": "Nablarchのformタグ",
+        "n:set": "Nablarchのsetタグ",
+        "n:write": "Nablarchのwriteタグ",
+        "n:ConfirmationPage": "確認画面タグ",
+        "n:forConfirmationPage": "確認画面用の出力内容を定義するタグ",
+        "n:forInputPage": "入力画面用の出力内容を定義するタグ",
+        "n:param": "リクエストパラメータを定義するタグ",
+        "n:hidden": "nablarch_hidden項目の出力タグ",
+        "t:page_template": "業務画面のテンプレート",
+        "t:errorpage_template": "エラー画面のテンプレート",
+        "box:.*": "boxウィジェット",
+        "button:.*": "buttonウィジェット",
+        "field:.*": "fieldウィジェット",
+        "link:.*": "linkウィジェット",
+        "tab:.*": "tabウィジェット",
+        "table:.*": "tableウィジェット",
+        "column:.*": "columnウィジェット",
+        "spec:.*": "specウィジェット",
+        "c:if": "JSTLの条件分岐タグ",
+        "jsp:attribute": "",
+        "%--": "JSPコメント",
+        "%@page": "JSPティレクティブ（page宣言）",
+        "%@taglib": "JSPディレクティブ（taglib宣言）"
+      }
+    },
+    "RegexpBasedVerifier": {
+      "required": {
+      },
+      "forbidden": {
+        "/>": "自己終了エレメントを利用すると、その要素以降の記述内容が描画されなくなるため禁止。"
+      }
+    },
+    "SelectorBasedVerifier": {
+      "required": {
+      },
+      "forbidden": {
+        "table:not([listSearchInfoName])": "テーブルにはlistSearchInfoNameがないと結果件数が表示されないため、listSearchInfoNameを強制。",
+        "table:not([id])" : "テーブルを複数表示する場合にIDが必須となるため、テーブルにはIDを強制。"
+      }
+    },
+    "WrappingTagVerifier": {
+      "required": {
+        "tableウィジェットは、n:formで囲む必要がある。": {
+          "child": "table:.*",
+          "parent": "n\\:form"
+        },
+        "buttonウィジェットは、n:formで囲む必要がある。": {
+          "child": "button:.*",
+          "parent": "n\\:form"
+        },
+        "設計書ビューで画面項目定義に表示されるウィジェットは、spec:layoutで囲む必要がある。": {
+          "child": "(table|field|column):.+",
+          "parent": "spec\\:layout"
+        }
+      },
+      "forbidden": {
+      }
+    },
+    "TagAttributeVerifier": {
+      "directory": "C:\\nablarch\\workspace\\tutorial\\main\\web\\WEB-INF\\tags\\widget",
+      "encoding": "utf-8"
+    }
+  }
+}

@@ -1,0 +1,171 @@
+group = 'com.nablarch.tool'
+version = '1.0.2'
+description = 'ツールボックス'
+
+buildscript {
+  repositories {
+    mavenLocal()
+    maven { url "${developLibUrl}" }
+    jcenter()
+  }
+  dependencies {
+    classpath "com.nablarch.dev:nablarch-gradle-plugin:${nablarchGradlePluginVersion}"
+    classpath "net.saliman:gradle-cobertura-plugin:${coberturaPluginVersion}"
+    classpath "io.spring.gradle:dependency-management-plugin:0.5.3.RELEASE"
+  }
+}
+
+apply {
+  plugin 'com.nablarch.dev.nablarch-build'
+  plugin 'com.nablarch.dev.nablarch-sonarqube'
+  plugin 'com.nablarch.dev.nablarch-maven-deploy'
+  plugin 'cobertura'
+}
+apply plugin: "io.spring.dependency-management"
+
+dependencyManagement {
+  imports {
+    mavenBom 'com.nablarch.profile:nablarch-bom:5u6'
+  }
+  applyMavenExclusions false
+}
+
+sourceCompatibility = 1.6
+
+repositories {
+  mavenLocal()
+  maven { url "${developLibUrl}" }
+  jcenter()
+}
+
+configurations {
+  cobertura
+}
+
+dependencies {
+  //NAFの依存関係
+  compile 'com.nablarch.framework:nablarch-core:1.2.2'
+  compile 'com.nablarch.framework:nablarch-testing:1.0.6'
+  
+  compile 'org.apache.poi:poi-ooxml:3.8'
+  compile files("${System.getenv('JAVA_HOME')}/lib/tools.jar")
+
+  testCompile 'junit:junit:4.10'
+  testCompile 'org.hamcrest:hamcrest-all:1.3'
+  testRuntime 'org.apache.derby:derby:10.12.1.1'
+
+  // hereis
+  testCompile 'com.nablarch.dev:nablarch-test-support-hereis:1.0.0'
+  testRuntime files("${projectDir}/src/test/java")
+
+  cobertura "net.sourceforge.cobertura:cobertura:1.9.4"
+}
+
+task cleanTestLib(type: Delete) {
+  delete file("${projectDir}/src/test/tool_lib")
+  delete file("${projectDir}/src/main/lib")
+  delete file("${projectDir}/src/test/lib")
+}
+
+test {
+
+  jvmArgs (
+          '-XX:MaxPermSize=256m',
+          '-Xmx512m',
+          '-Dfile.encoding=UTF-8',
+          '-XX:-UseSplitVerifier'
+  )
+  // PublisherTestの中でリテラルで定義されているクラスパスに必要なjarを移動する。
+  doFirst {
+    
+    // Publishedアノテーションに必要なjarを取得
+    def publishedLibName = file(
+                             configurations.runtime.find{ file(it).name ==~ /nablarch-core-\d+.*\.jar/}
+                           ).name
+    
+    copy {
+      from (configurations.runtime) {
+        include 'tools.jar'
+      }
+      into "${projectDir}/src/test/tool_lib"
+    }
+    copy {
+      from (configurations.runtime) {
+        include publishedLibName
+      }
+      into "${projectDir}/src/main/lib"
+      
+      // jarの名前も固定なので、リネームする
+      rename publishedLibName, 'nablarch-core.jar'
+    }
+    copy {
+      from (configurations.runtime) {
+        include 'junit-4.10.jar'
+      }
+      into "${projectDir}/src/test/lib"
+    }
+  }
+
+
+  workingDir = "${projectDir}/src/test"
+  
+  include '**/*Test.class'
+  
+  ignoreFailures = true
+
+  cobertura {
+    coberturaVersion = '1.9.4.1'
+    coverageSourceDirs = ["${projectDir}/src/main/java/"]
+    //coverageIgnoreTrivial = true        // cobertura2.0以上じゃないと使えないらしい
+    coverageFormats = ['xml']
+    coverageDirs = [project.sourceSets.main.output.classesDir]
+    coverageExcludes = [
+            '.*Db2.*',
+            '.*PublishedApisInfoTest\\$.*Suite.*',
+            '.*UsageOfUnpublishedMethodDetectorTest.*'
+    ]
+  }
+}
+test.dependsOn cleanTestLib
+
+task coverage(dependsOn: ['clean', 'generateCoberturaReportByAnt'])
+
+
+def coberturaReportDir = new File(project.buildDir, "cobertura-report")
+
+task generateCoberturaReportByAnt(dependsOn: 'cobertura') {
+  def dataFile = "${project.buildDir}/cobertura/cobertura.ser"
+
+  inputs.file file(dataFile)
+  outputs.dir coberturaReportDir
+
+  doLast {
+    ant {
+      taskdef(resource: 'tasks.properties',
+              classpath: configurations.cobertura.asPath)
+
+      'cobertura-report'(
+              destdir: coberturaReportDir,
+              datafile: dataFile,
+              srcdir: "${projectDir}/src/main/java/",
+              format: 'xml'
+      )
+    }
+  }
+}
+
+sonarRunner {
+  sonarProperties {
+    property "sonar.dynamicAnalysis", "reuseReports"
+    property "sonar.java.coveragePlugin", "cobertura"
+    property "sonar.cobertura.reportPath", "${coberturaReportDir}/coverage.xml"
+  }
+}
+
+tasks.sonarRunner {
+  dependsOn = ['coverage']
+}
+ 
+wrapper {
+    gradleVersion = '2.4'
+}

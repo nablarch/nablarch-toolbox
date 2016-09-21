@@ -1,0 +1,18 @@
+{
+  "name": "jsp-verifier",
+  "version": "0.0.0",
+  "description": "JSP file verifier",
+  "main": "bin/jsp_verifier",
+  "scripts": {
+    "test": "mocha test"
+  },
+  "repository": "",
+  "author": "TIS Inc.",
+  "dependencies": {
+    "cheerio": "~0.13.0",
+    "sugar": "~1.4.1"
+  },
+  "devDependencies": {
+    "mocha": "~1.16.2"
+  }
+}
