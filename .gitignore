@@ -80,7 +80,7 @@ hs_err_pid*
 *.pydevproject
 .metadata
 .gradle
-bin/
+# bin/
 tmp/
 *.tmp
 *.bak
@@ -116,10 +116,9 @@ local.properties
 
 # test generated
 build/
-src/test/work
 src/test/target
 src/test/resources/nablarch/tool/jspgenerator/*.jsp
 PublisherTest.config
 src/test/lib/*.jar
 
-/work/
+src/test/work/*
