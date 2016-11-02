@@ -19,16 +19,10 @@ apply {
   plugin 'com.nablarch.dev.nablarch-build'
   plugin 'com.nablarch.dev.nablarch-sonarqube'
   plugin 'com.nablarch.dev.nablarch-maven-deploy'
+  plugin 'com.nablarch.dev.nablarch-version'
   plugin 'cobertura'
 }
 apply plugin: "io.spring.dependency-management"
-
-dependencyManagement {
-  imports {
-    mavenBom 'com.nablarch.profile:nablarch-bom:5u7'
-  }
-  applyMavenExclusions false
-}
 
 sourceCompatibility = 1.6
 
@@ -44,8 +38,8 @@ configurations {
 
 dependencies {
   //NAFの依存関係
-  compile 'com.nablarch.framework:nablarch-core:1.2.2'
-  compile 'com.nablarch.framework:nablarch-testing:1.0.6'
+  compile "com.nablarch.framework:nablarch-core:${nablarchCoreVersion}"
+  compile "com.nablarch.framework:nablarch-testing:${nablarchTestingVersion}"
   
   compile 'org.apache.poi:poi-ooxml:3.8'
   compile files("${System.getenv('JAVA_HOME')}/lib/tools.jar")
