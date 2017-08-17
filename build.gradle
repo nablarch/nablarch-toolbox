@@ -105,7 +105,6 @@ test {
   
   include '**/*Test.class'
   
-  ignoreFailures = true
 
   cobertura {
     coberturaVersion = '1.9.4.1'
