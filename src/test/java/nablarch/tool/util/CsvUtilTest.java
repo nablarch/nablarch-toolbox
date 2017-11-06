@@ -25,7 +25,7 @@ import org.junit.rules.ExpectedException;
 public class CsvUtilTest {
     
     List<Map<String, String>> testDataList = null;
-    String outputFilePath = "work/CsvUtilTest.csv";
+    String outputFilePath = "target/test-work/CsvUtilTest.csv";
     
     @Before
     public void setUp(){
@@ -56,7 +56,7 @@ public class CsvUtilTest {
         CsvUtil.writeFile(testDataList, outputFilePath, "UTF-8", "\r\n");
         
         String actual = SimpleReader.fileToString(outputFilePath, "UTF-8");
-        String expected = SimpleReader.fileToString("java/nablarch/tool/util/CsvUtilTest.csv", "UTF-8"); 
+        String expected = SimpleReader.fileToString("src/test/resources/nablarch/tool/util/CsvUtilTest.csv", "UTF-8"); 
         
         assertThat(actual, is(expected));
     }

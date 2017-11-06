@@ -20,7 +20,7 @@ import static org.junit.Assert.*;
 public class PoiUtilTest {
 
     /** テストで使用するEXCELファイル */
-    private static File excelFile = new File("./java/nablarch/tool/util/poi/PoiUtilTest.xls");
+    private static File excelFile = new File("src/test/resources/nablarch/tool/util/poi/PoiUtilTest.xls");
 
     /**
      * ファイルが正しく開けること。
@@ -30,8 +30,8 @@ public class PoiUtilTest {
         HSSFWorkbook workbook = PoiUtil.getHssfWorkbook(excelFile);
         assertThat(workbook.getSummaryInformation().getTitle(), is(excelFile.getAbsolutePath()));
 
-        workbook = PoiUtil.getHssfWorkbook("./java/nablarch/tool/util/poi/PoiUtilTest1.xls");
-        assertThat(workbook.getSummaryInformation().getTitle(), is(new File("./java/nablarch/tool/util/poi/PoiUtilTest1.xls").getAbsolutePath()));
+        workbook = PoiUtil.getHssfWorkbook("src/test/resources/nablarch/tool/util/poi/PoiUtilTest1.xls");
+        assertThat(workbook.getSummaryInformation().getTitle(), is(new File("src/test/resources/nablarch/tool/util/poi/PoiUtilTest1.xls").getAbsolutePath()));
     }
 
     /**

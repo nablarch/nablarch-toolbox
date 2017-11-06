@@ -15,7 +15,7 @@ import static org.junit.Assert.*;
  */
 public class EmptyAwareTableReaderTest {
 
-    private static final String BOOK = "./java/nablarch/tool/util/poi/EmptyAwareTableReaderTest.xls";
+    private static final String BOOK = "src/test/resources/nablarch/tool/util/poi/EmptyAwareTableReaderTest.xls";
 
     /**
      * 数式を利用したシートであっても、表を認識して読み取れること。
