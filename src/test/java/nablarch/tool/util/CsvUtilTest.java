@@ -29,8 +29,11 @@ public class CsvUtilTest {
     
     @Before
     public void setUp(){
-
-        if (!FileUtil.deleteFile(new File(outputFilePath))) {
+        final File outputDir = new File(outputFilePath);
+        if (!outputDir.exists()) {
+            outputDir.mkdirs();
+        }
+        if (!FileUtil.deleteFile(outputDir)) {
             throw new RuntimeException("This file can not be deleted. filePath = [" + outputFilePath + "]");
         }
 
