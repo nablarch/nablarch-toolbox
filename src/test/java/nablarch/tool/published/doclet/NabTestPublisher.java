@@ -2,6 +2,8 @@ package nablarch.tool.published.doclet;
 
 import com.sun.tools.javadoc.Main;
 import nablarch.tool.published.doclet.testfiles.PublishedClass;
+
+import org.junit.Ignore;
 import org.junit.Test;
 
 import java.io.File;
@@ -20,6 +22,7 @@ import static org.junit.Assert.assertThat;
  *
  * @author T.Kawasaki
  */
+@Ignore
 public class NabTestPublisher {
 
     /** ドックレットクラス名 */
@@ -32,12 +35,10 @@ public class NabTestPublisher {
 //    private static final String PKG = PublishedClass.class.getPackage().getName();
     private static final String PKG = "nablarch";
 
-    /** ドックレット実行時のクラスパス */
-    private static final String CLASSPATH = "C:\\work\\workspace-helios\\Nablarch\\lib\\activation.jar;C:\\work\\workspace-helios\\Nablarch\\lib\\jms-api-1.1-rev-1.jar;C:\\work\\workspace-helios\\Nablarch\\lib\\jsp-api-2.1.jar;C:\\work\\workspace-helios\\Nablarch\\lib\\mailapi.jar;C:\\work\\workspace-helios\\Nablarch\\lib\\nablarch-tfw.jar;C:\\work\\workspace-helios\\Nablarch\\lib\\nablarch-toolbox.jar;C:\\work\\workspace-helios\\Nablarch\\lib\\servlet-api.jar;C:\\work\\workspace-helios\\Nablarch\\lib\\standard-1.1.2.jar;C:\\work\\workspace-helios\\Nablarch\\lib\\tools.jar";
 
     /** ドックレット引数。 */
     private final List<String> docletArgs = new ArrayList<String>(Arrays.asList(
-            "-classpath", CLASSPATH,
+            "-classpath", System.getProperty("java.class.path"),
             "-sourcepath", "C:\\work\\workspace-helios\\Nablarch\\java",
             "-d", DEST_DIR.getPath(),
             "-encoding", "UTF-8",

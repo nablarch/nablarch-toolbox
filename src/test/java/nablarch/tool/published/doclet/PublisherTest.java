@@ -10,15 +10,14 @@ import org.junit.Test;
 import com.sun.tools.javadoc.Main;
 
 import nablarch.tool.published.doclet.testfiles.PublishedClass;
-import static nablarch.tool.published.doclet.Util.join;
+
 import static nablarch.tool.published.doclet.Util.prepare;
 import static org.hamcrest.CoreMatchers.is;
 import static org.junit.Assert.assertThat;
 
 /**
  * テスト用の公開API出力クラス。<br />
- * tool/testをカレントディレクトリとして実行する。<br />
- * テスト結果を確認する際は、テストで出力されたJavadoc(src/test/target/javadoc/)<br />
+ * テスト結果を確認する際は、テストで出力されたJavadoc(target/javadoc/)<br />
  * を確認すること。<br />
  * ドキュメントのリンクに関しては、以下のクラスのJavadocに記述している。<br />
  * {@link nablarch.tool.published.doclet.testfiles.TagsOutput}<br />
@@ -39,8 +38,6 @@ import static org.junit.Assert.assertThat;
  */
 public class PublisherTest {
 
-    private static final String TOOL_MAIN_PATH_KEY = "TOOL_MAIN_PATH";
-
     /** ドックレットクラス名 */
     private static final String DOCLET_NAME = PublishedDoclet.class.getName();
 
@@ -50,14 +47,9 @@ public class PublisherTest {
     /** パッケージ */
     private static final String PKG = PublishedClass.class.getPackage().getName();
 
-    /** ドックレット実行時のクラスパス */
-    private static final String[] CLASSPATH = { "tool_lib/tools.jar",
-                                                 "../main/lib/nablarch-core.jar", 
-                                                 "lib/junit-4.10.jar" };
-
     /** ドックレット引数。 */
     private final List<String> docletArgs = new ArrayList<String>(Arrays.asList(
-            "-sourcepath", "java",
+            "-sourcepath", "src/test/java",
             "-d", DEST_DIR.getPath(),
             "-encoding", "UTF-8",
             "-charset", "UTF-8",
@@ -108,7 +100,7 @@ public class PublisherTest {
         args.add("-d");
         args.add("./target/javadoc/publish");
         args.add("-classpath");
-        args.add(createClassPath(args));
+        args.add(System.getProperty("java.class.path"));
         args.add("-output");
         args.add(this.getClass().getSimpleName() + ".config");
 
@@ -128,7 +120,7 @@ public class PublisherTest {
         args.add("-tag");
         args.add("architect");
         args.add("-classpath");
-        args.add(createClassPath(args));
+        args.add(System.getProperty("java.class.path"));
         args.add("-output");
         args.add(this.getClass().getSimpleName() + ".config");
 
@@ -144,31 +136,9 @@ public class PublisherTest {
         List<String> args = new ArrayList<String>();
         args.addAll(docletArgs);
         args.add("-classpath");
-        args.add(createClassPath(args));
+        args.add(System.getProperty("java.class.path"));
 
         return publish(docletArgs);
-    }
-    /**
-     * javadoc 実行時のクラスパスを作成する。<br />
-     * 元のクラスパスにある "main/" の文字をシステム環境変数の "TOOL_MAIN_PATH" に置き換える。
-     * 
-     * @param args 元のクラスパスのリスト
-     * @return 生成したクラスパス
-     */
-    private String createClassPath(List<String> args) {
-        if (System.getProperty(TOOL_MAIN_PATH_KEY) != null) {
-            List<String> pathList = new ArrayList<String>();
-            for (String path : CLASSPATH) {
-                pathList.add(path.replace("../main/lib/",
-                        System.getProperty(TOOL_MAIN_PATH_KEY)
-                                + File.separator
-                                + "lib"
-                                + File.separator));
-            }
-            return join(pathList.toArray(new String[pathList.size()]));
-        } else {
-            return join(CLASSPATH);
-        }
     }
 
     /**

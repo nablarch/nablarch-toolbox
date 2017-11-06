@@ -32,7 +32,7 @@ public class SimpleReaderTest {
      */
     @Test
     public void testFileToString(){
-        String actual = SimpleReader.fileToString("java/nablarch/tool/util/SimpeReaderTestNomalData.txt", "UTF-8");
+        String actual = SimpleReader.fileToString("src/test/resources/nablarch/tool/util/SimpeReaderTestNomalData.txt", "UTF-8");
         
         String expected = "123456789\r\nabcdefg\r\n"
                         + "あいうえお\r\nカキクケコ\r\n"
@@ -62,6 +62,6 @@ public class SimpleReaderTest {
         thrown.expect(RuntimeException.class);
         thrown.expectMessage("this encoding is not supported. encoding=[test-encoding]");
         
-        SimpleReader.fileToString("java/nablarch/tool/util/SimpeReaderTestNomalData.txt", "test-encoding");
+        SimpleReader.fileToString("src/test/resources/nablarch/tool/util/SimpeReaderTestNomalData.txt", "test-encoding");
     }
 }

@@ -19,7 +19,7 @@ import static org.junit.Assert.*;
 public class SimpleTableWriterTest {
 
 
-    private static String BOOK = "java/nablarch/tool/util/poi/SimpleTableWriterTest.xls";
+    private static String BOOK = "src/test/resources/nablarch/tool/util/poi/SimpleTableWriterTest.xls";
 
 
     /** */
