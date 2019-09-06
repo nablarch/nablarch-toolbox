@@ -28,7 +28,7 @@
     <profile>
       <id>ci</id>
       <properties>
-        <tools.jar>${env.COMPILE_JAVA_HOME}/lib/tools.jar</tools.jar>
+        <tools.jar>${env.TEST_JDK}/lib/tools.jar</tools.jar>
       </properties>
     </profile>
   </profiles>
