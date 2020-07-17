@@ -4,55 +4,54 @@
 |:-----------|:------------|
 |[![Build Status](https://travis-ci.org/nablarch/nablarch-toolbox.svg?branch=master)](https://travis-ci.org/nablarch/nablarch-toolbox)|[![Build Status](https://travis-ci.org/nablarch/nablarch-toolbox.svg?branch=develop)](https://travis-ci.org/nablarch/nablarch-toolbox)|
 
-## 使用許可API一覧作成ツールの出力条件に関して
-現在、以下のような条件でJavadocと一覧ファイルに出力しています。
+## Output Conditions of the Authorized API List Creation Tool
+Currently, output to Javadoc and the list file under the following conditions.
 
-* パッケージ
-    * Javadoc：パッケージに一つでも出力される要素がある場合出力されます。
-    * 一覧ファイル：出力されません。
-
-
-* クラス(抽象クラス、内部クラス、インターフェース、アノテーションも同様)
-    * Javadoc：クラス自身に@Publishedが付くか、そのクラスが定義しているコンストラクタ、フィールド、メソッドのうちどれか一つでも@Publishedがついていれば、出力されます。
-    * 一覧ファイル：クラス自身に@Publishedがついているときのみ出力されます
+*  Package
+    * Javadoc: If the package has at least one output element, it will be output.
+    * List file: Not output.
 
 
-* フィールド・コンストラクタ・メソッド
-    * Javadoc：要素自身が@Publishedを持つか、この要素が定義されているクラスに@Publishedがついていれば出力されます。
-    * 一覧ファイル：要素自身に@Publishedがついているときのみ出力されます。
+* Class (including abstract class, inner class, interface and annotation)
+    * Javadoc: It is output when @Published is marked for the class, or at least when @Published is marked to any one of the constructor, field and method defined by the class.
+    * List file: It is output only when @Published is attached to the class.
 
 
-* 継承に関して
-    * スーパークラス、サブクラスともに出力条件は上記と同じです。
-    * フィールド・メソッド・コンストラクタに関しては、スーパークラス、サブクラス共にクラスで定義されたものに関して、継承を使っていない場合と同じ条件で出力されます。
-    * Javadocの"クラスから継承されたメソッド(もしくはフィールド)"への出力条件は、スーパークラスで出力されていて、かつサブクラスの出力されるメソッドでオーバーライド(フィールドならば隠蔽)されていない事です。
+* Field constructor method
+    * Javadoc: It is output when the element has @Published or when the class in which the element is defined has @Published.
+    * List file: It is output only when @Published is attached to the element.
 
 
-* 実装に関して、
-    * 継承と同じです。
+* Inheritance
+    * The output conditions for both superclass and subclass are the same as above.
+    * For field method constructors, both superclass and subclass defined in the class are output under the same conditions as when inheritance is not used.
+    * The output conditions for "method (or field) inherited from the class" of Javadoc is that it is output by the superclass and is not overridden (hidden, if is a field) by the output method of the subclass.
 
 
-* 内部クラスに関して
-    * 外部クラスが出力されるかどうかに関わらず、普通のクラス(もしくはフィールド・コンストラクタ・メソッド)と同じ条件で出力されます。
+* In terms of implementation,
+    * it is the same as inheritance.
 
 
-* 外部クラスに関して
-    * 内部クラスが出力されるかどうかに関わらず、普通のクラス(もしくはフィールド・コンストラクタ・メソッド)と同じ条件で出力されます。
+* Internal class
+    * It is output under the same conditions as a general class (or field constructor method), regardless of whether an external class is output.
 
 
-## 依存ライブラリ
+* External class
+    * It is output under the same conditions as a general class (or field constructor method), regardless of whether an internal class is output.
 
-本モジュールのコンパイルまたはテストには、下記ライブラリを手動でローカルリポジトリへインストールする必要があります。
 
-ライブラリ          |ファイル名       |グループID     |アーティファクトID   |バージョン   |
+## Dependent library
+
+Manually install the following libraries in the local repository before compiling or testing this module.
+
+Library          |File name       |Group ID     |Artifact ID   |Version  |
 :-------------------|:----------------|:--------------|:--------------------|:------------|
 Oracle JDBC Driver  |ojdbc6.jar       |com.oracle     |ojdbc6               |11.2.0.2.0   |
 Oracle UCP for JDBC |ucp.jar          |com.oracle     |ucp                  |11.2.0.3.0   |
 
 
-上記ライブラリは、下記コマンドでインストールしてください。
-
+Install the above library with the following command.
 
 ```
-mvn install:install-file -Dfile=<ファイル名> -DgroupId=<グループID> -DartifactId=<アーティファクトID> -Dversion=<バージョン> -Dpackaging=jar
+mvn install:install-file -Dfile=<File name> -DgroupId=<Group ID> -DartifactId=<Artifact ID> -Dversion=<Version> -Dpackaging=jar
 ```
