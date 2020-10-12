@@ -1,9 +1,5 @@
 # Nablarch-Toolbox
 
-| master | develop |
-|:-----------|:------------|
-|[![Build Status](https://travis-ci.org/nablarch/nablarch-toolbox.svg?branch=master)](https://travis-ci.org/nablarch/nablarch-toolbox)|[![Build Status](https://travis-ci.org/nablarch/nablarch-toolbox.svg?branch=develop)](https://travis-ci.org/nablarch/nablarch-toolbox)|
-
 ## 使用許可API一覧作成ツールの出力条件に関して
 現在、以下のような条件でJavadocと一覧ファイルに出力しています。
 
