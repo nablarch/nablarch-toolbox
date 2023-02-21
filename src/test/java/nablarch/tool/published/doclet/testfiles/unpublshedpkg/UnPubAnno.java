@@ -7,7 +7,7 @@ import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
 /**
- * @Published なし。
+ * {@literal @}Published なし。
  * 
  */
 @Retention(RetentionPolicy.SOURCE)

@@ -5,27 +5,23 @@
 |[![Build Status](https://travis-ci.org/nablarch/nablarch-toolbox.svg?branch=master)](https://travis-ci.org/nablarch/nablarch-toolbox)|[![Build Status](https://travis-ci.org/nablarch/nablarch-toolbox.svg?branch=develop)](https://travis-ci.org/nablarch/nablarch-toolbox)|
 
 ## Output Conditions of the Authorized API List Creation Tool
-Currently, output to Javadoc and the list file under the following conditions.
+Currently, output to the list file under the following conditions.
 
 *  Package
-    * Javadoc: If the package has at least one output element, it will be output.
-    * List file: Not output.
+    * Not output.
 
 
 * Class (including abstract class, inner class, interface and annotation)
-    * Javadoc: It is output when @Published is marked for the class, or at least when @Published is marked to any one of the constructor, field and method defined by the class.
-    * List file: It is output only when @Published is attached to the class.
+    * It is output only when @Published is attached to the class.
 
 
 * Field constructor method
-    * Javadoc: It is output when the element has @Published or when the class in which the element is defined has @Published.
-    * List file: It is output only when @Published is attached to the element.
+    * It is output only when @Published is attached to the element.
 
 
 * Inheritance
     * The output conditions for both superclass and subclass are the same as above.
     * For field method constructors, both superclass and subclass defined in the class are output under the same conditions as when inheritance is not used.
-    * The output conditions for "method (or field) inherited from the class" of Javadoc is that it is output by the superclass and is not overridden (hidden, if is a field) by the output method of the subclass.
 
 
 * In terms of implementation,

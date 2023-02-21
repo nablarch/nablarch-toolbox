@@ -1,134 +1,117 @@
 package nablarch.tool.published.doclet;
 
-import java.io.File;
-import java.math.BigDecimal;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
-
-import org.junit.Assume;
+import nablarch.tool.published.doclet.testfiles.PublishedClass;
 import org.junit.Test;
 
-import com.sun.tools.javadoc.Main;
-
-import nablarch.tool.published.doclet.testfiles.PublishedClass;
+import javax.tools.DocumentationTool;
+import javax.tools.ToolProvider;
+import java.io.BufferedReader;
+import java.io.File;
+import java.io.IOException;
+import java.io.InputStreamReader;
+import java.io.UncheckedIOException;
+import java.net.URL;
+import java.nio.charset.StandardCharsets;
+import java.util.ArrayList;
+import java.util.List;
 
 import static nablarch.tool.published.doclet.Util.prepare;
+import static org.hamcrest.CoreMatchers.equalTo;
 import static org.hamcrest.CoreMatchers.is;
-import static org.junit.Assert.assertThat;
+import static org.hamcrest.CoreMatchers.not;
+import static org.hamcrest.MatcherAssert.assertThat;
 
 /**
- * テスト用の公開API出力クラス。<br />
- * テスト結果を確認する際は、テストで出力されたJavadoc(target/javadoc/)<br />
- * を確認すること。<br />
- * ドキュメントのリンクに関しては、以下のクラスのJavadocに記述している。<br />
- * {@link nablarch.tool.published.doclet.testfiles.TagsOutput}<br />
- * {@link nablarch.tool.published.doclet.testfiles.TagsOutputForMix}<br />
- * <br />
- * テスト用に以下のパッケージを読み込んでいる。<br />
- * nablarch.tool.published.doclet.testfiles<br />
- * nablarch.tool.published.doclet.testfiles.publishedpkg<br />
- * nablarch.tool.published.doclet.testfiles.unpublshedpkg<br />
- * nablarch.tool.published.doclet.testfiles.publishedOnlyClass<br />
- * nablarch.tool.published.doclet.testfiles.publishedOnlyField<br/>
- * nablarch.tool.published.doclet.testfiles.publishedOnlyMethod<br/>
- * <br />
- * また、外部ドキュメントへのリンクを張るのに必要なため、次のファイルを使用している。<br />
- * src/test/resources/nablarch/tool/published/package-list<br />
+ * テスト用の公開API出力クラス。
+ * <p>
+ * このテストクラスは、以下2つのことをチェックしている。
+ * </p>
+ * <ul>
+ *   <li>終了ステータスが意図したものになっていること</li>
+ *   <li>出力された使用不許可APIチェックツールの設定ファイルが意図通りであること</li>
+ * </ul>
+ * <p>
+ * 5uXXの頃はPublishedアノテーションの有無でJavadocの出力内容を制御していたため
+ * Javadocの出力結果をチェックする必要があった。
+ * しかし、6uXXで全ての要素をそのまま出力することになったため、PublishedDocletからは
+ * Javadocの出力機能を削除した。
+ * </p>
  * 
  * @author T.Kawasaki
  */
 public class PublisherTest {
 
-    /** ドックレットクラス名 */
-    private static final String DOCLET_NAME = PublishedDoclet.class.getName();
-
-    /** 出力先ディレクトリ */
-    private static final File DEST_DIR = prepare("target/javadoc");
+    /** 設定ファイル出力先ディレクトリ */
+    private static final File CONFIG_DEST_DIR = prepare("target/published");
 
     /** パッケージ */
     private static final String PKG = PublishedClass.class.getPackage().getName();
 
     /** ドックレット引数。 */
-    private final List<String> docletArgs = new ArrayList<String>(Arrays.asList(
-            "-sourcepath", "src/test/java",
-            "-d", DEST_DIR.getPath(),
-            "-encoding", "UTF-8",
-            "-charset", "UTF-8",
-            "-protected",
-            "-subpackages", PKG,
-            "-linkoffline", "http://docs.oracle.com/javase/jp/7/api", "resources/nablarch/tool/published"
-            //"-tag", "architect",
-    ));
+    private final List<String> docletArgs = List.of(
+        "-sourcepath", "src/test/java",
+        "-encoding", "UTF-8",
+        "-charset", "UTF-8",
+        "-protected",
+        "-subpackages", PKG,
+        "-doclet", PublishedDoclet.class.getName()
+    );
 
     /**
      * 公開APIを作成する。
-     *
-     *  補足：<br />
-     *  本テストを実行する際は、Javaのバージョンと同じバージョンのtool.jarを使用しないと、実行できない。<br />
-     *  しかしながら、mvnのコンパイルのフェーズと、mvnのテストフェーズで別々のtool.jarを指定する方法が不明なので、
-     *  コンパイル時と同じJavaでユニットテストを(Java6でビルドする想定)のみ、このテストは実行する。<br />
      */
     @Test
-    public void testPublish() {
-        Assume.assumeTrue(new BigDecimal(System.getProperty("java.specification.version")).compareTo(new BigDecimal("1.6")) <= 0);
-        int status = publish();
+    public void testPublish() throws Exception {
+        File output = new File(CONFIG_DEST_DIR, "/publishedForAll.config");
+        int status = publish(output);
         assertThat(status, is(0));
+
+        final List<String> actual = readAllLinesWithSort(output.toURI().toURL());
+        final List<String> expected = readAllLinesWithSort(
+                PublisherTest.class.getResource("/nablarch/tool/published/doclet/publishedForAll.config"));
+        
+        assertThat(actual, equalTo(expected));
     }
 
     /**
      * タグ付きの公開APIを作成する。
-     *
-     *  補足：<br />
-     *  本テストを実行する際は、Javaのバージョンと同じバージョンのtool.jarを使用しないと、実行できない。<br />
-     *  しかしながら、mvnのコンパイルのフェーズと、mvnのテストフェーズで別々のtool.jarを指定する方法が不明なので、
-     *  コンパイル時と同じJavaでユニットテストを(Java6でビルドする想定)のみ、このテストは実行する。<br />
      */
     @Test
-    public void testPublishTagged() {
-        Assume.assumeTrue(new BigDecimal(System.getProperty("java.specification.version")).compareTo(new BigDecimal("1.6")) <= 0);
-        int status = publishForArchitect();
+    public void testPublishTagged() throws Exception {
+        File output = new File(CONFIG_DEST_DIR, "publishedForArchitect.config");
+        int status = publishForArchitect(output);
         assertThat(status, is(0));
+        
+        final List<String> actual = readAllLinesWithSort(output.toURI().toURL());
+        final List<String> expected = readAllLinesWithSort(
+                PublisherTest.class.getResource("/nablarch/tool/published/doclet/publishedForArchitect.config"));
+
+        assertThat(actual, equalTo(expected));
     }
 
     /**
      * outputオプションを指定せずに公開APIを作成する。
-     *
-     *  補足：<br />
-     *  本テストを実行する際は、Javaのバージョンと同じバージョンのtool.jarを使用しないと、実行できない。<br />
-     *  しかしながら、mvnのコンパイルのフェーズと、mvnのテストフェーズで別々のtool.jarを指定する方法が不明なので、
-     *  コンパイル時と同じJavaでユニットテストを(Java6でビルドする想定)のみ、このテストは実行する。<br />
      */
     @Test
     public void testPublishWithoutOutput() {
-        Assume.assumeTrue(new BigDecimal(System.getProperty("java.specification.version")).compareTo(new BigDecimal("1.6")) <= 0);
         int status = publishWithoutOutput();
-        assertThat(status, is(1));
-    }
-
-    /**
-     * メインメソッド。
-     *
-     * @param args 使用しない
-     */
-    public static void main(String[] args) {
-        new PublisherTest().publish();
+        assertThat(status, is(not(0)));
     }
 
     /**
      * デフォルトの公開範囲で公開する。
      *
+     * @param output 設定ファイルの出力先
      * @return ステータスコード
      */
-    public int publish() {
-        List<String> args = new ArrayList<String>();
-        args.addAll(docletArgs);
+    public int publish(File output) {
+        List<String> args = new ArrayList<>(docletArgs);
         args.add("-d");
         args.add("./target/javadoc/publish");
         args.add("-classpath");
         args.add(System.getProperty("java.class.path"));
         args.add("-output");
-        args.add(this.getClass().getSimpleName() + ".config");
+        args.add(output.getPath());
 
         return publish(args);
     }
@@ -136,11 +119,11 @@ public class PublisherTest {
     /**
      * アーキテクト向けの公開範囲で公開する。
      *
+     * @param output 設定ファイルの出力先
      * @return ステータスコード
      */
-    public int publishForArchitect() {
-        List<String> args = new ArrayList<String>();
-        args.addAll(docletArgs);
+    public int publishForArchitect(File output) {
+        List<String> args = new ArrayList<>(docletArgs);
         args.add("-d");
         args.add("./target/javadoc/publishArchetect");
         args.add("-tag");
@@ -148,7 +131,7 @@ public class PublisherTest {
         args.add("-classpath");
         args.add(System.getProperty("java.class.path"));
         args.add("-output");
-        args.add(this.getClass().getSimpleName() + ".config");
+        args.add(output.getPath());
 
         return publish(args);
     }
@@ -159,12 +142,11 @@ public class PublisherTest {
      * @return ステータスコード
      */
     public int publishWithoutOutput() {
-        List<String> args = new ArrayList<String>();
-        args.addAll(docletArgs);
+        List<String> args = new ArrayList<>(docletArgs);
         args.add("-classpath");
         args.add(System.getProperty("java.class.path"));
 
-        return publish(docletArgs);
+        return publish(args);
     }
 
     /**
@@ -174,10 +156,42 @@ public class PublisherTest {
      * @return javadoc 実行結果の戻り値。
      */
     private int publish(List<String> args) {
-        System.out.println("generating javadoc in [" + new File(System.getProperty("user.dir")).getAbsolutePath());
+        System.out.println("generating javadoc in [" + new File(System.getProperty("user.dir")).getAbsolutePath() + "]");
 
-        String[] docletArgs = args.toArray(new String[args.size()]);
-        return Main.execute(DOCLET_NAME, DOCLET_NAME, docletArgs);
+        String[] docletArgs = args.toArray(new String[0]);
+
+        final DocumentationTool documentationTool = ToolProvider.getSystemDocumentationTool();
+        return documentationTool.run(null, null, null, docletArgs);
     }
 
+    /**
+     * 指定されたパスのファイルの内容を読み込む。
+     * <p>
+     * 行ごとにリストの要素に分割され、ソートされた結果が返される。
+     * </p>
+     * @param url 読み込むファイルのURL
+     * @return 読み込み結果
+     */
+    private List<String> readAllLinesWithSort(URL url) {
+        try (final BufferedReader reader = new BufferedReader(new InputStreamReader(url.openStream(), StandardCharsets.UTF_8))) {
+            List<String> result = new ArrayList<>();
+            String line;
+            while ((line = reader.readLine()) != null) {
+                result.add(line);
+            }
+            result.sort(String::compareTo);
+            return result;
+        } catch (IOException e) {
+            throw new UncheckedIOException(e);
+        }
+    }
+
+    /**
+     * メインメソッド。
+     *
+     * @param args 使用しない
+     */
+    public static void main(String[] args) {
+        new PublisherTest().publish(new File("target/test.config"));
+    }
 }

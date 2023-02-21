@@ -9,7 +9,7 @@ import java.lang.annotation.Target;
 import nablarch.core.util.annotation.Published;
 
 /**
- * @Published 付。
+ * {@literal @}Published 付。
  *
  */
 @Published(tag = "architect")

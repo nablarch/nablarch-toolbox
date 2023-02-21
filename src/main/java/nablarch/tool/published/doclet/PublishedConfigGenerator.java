@@ -1,20 +1,24 @@
 package nablarch.tool.published.doclet;
 
+import jdk.javadoc.doclet.DocletEnvironment;
+import nablarch.core.util.Builder;
+import nablarch.core.util.FileUtil;
+
+import javax.lang.model.element.ExecutableElement;
+import javax.lang.model.element.Name;
+import javax.lang.model.element.TypeElement;
+import javax.lang.model.element.VariableElement;
+import javax.lang.model.type.TypeMirror;
+import javax.lang.model.util.ElementFilter;
 import java.io.BufferedWriter;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
-import com.sun.javadoc.ClassDoc;
-import com.sun.javadoc.ConstructorDoc;
-import com.sun.javadoc.FieldDoc;
-import com.sun.javadoc.MethodDoc;
-import com.sun.javadoc.RootDoc;
-
-import nablarch.core.util.Builder;
-import nablarch.core.util.FileUtil;
+import java.util.stream.Collectors;
 
 /**
  * Nablarchの提供する「使用不許可APIチェックツール」で利用する設定ファイル（Nablarchで利用可能としているAPIのホワイトリスト）を作成する。
@@ -26,7 +30,7 @@ public class PublishedConfigGenerator {
     /**
      * Publishedアノテーションが付与されたクラス・メソッドかどうかの判定に利用するクラス。
      */
-    private PublishedCollector collector;
+    private final PublishedCollector collector;
 
     /**
      * 出力対象とするPublishedCollectorを指定してインスタンスを生成する。
@@ -44,12 +48,15 @@ public class PublishedConfigGenerator {
      * @param rootDoc プログラム構造情報のルート
      * @param path 「使用不許可APIチェックツール」用設定ファイルの出力先パス
      */
-    public void generate(RootDoc rootDoc, String path) {
+    public void generate(DocletEnvironment rootDoc, String path) {
         BufferedWriter writer = null;
         try {
             writer = new BufferedWriter(new FileWriter(path));
-            for (ClassDoc classDoc : rootDoc.classes()) {
-                List<String> apis = generateForClassElements(classDoc);
+
+            Set<TypeElement> typeElements = ElementFilter.typesIn(rootDoc.getIncludedElements());
+
+            for (TypeElement typeElement : typeElements) {
+                List<String> apis = generateForClassElements(typeElement);
                 if (!apis.isEmpty()) {
                     writer.write(Builder.join(apis, Builder.LS));
                     writer.write(Builder.LS);
@@ -57,7 +64,7 @@ public class PublishedConfigGenerator {
                 }
             }
         } catch (IOException e) {
-            throw new RuntimeException("Failed to write file. file=[" + path + "]");
+            throw new RuntimeException("Failed to write file. file=[" + path + "]", e);
         } finally {
             FileUtil.closeQuietly(writer);
         }
@@ -67,37 +74,90 @@ public class PublishedConfigGenerator {
      * 指定されたクラスについて、指定されたタグを持つか、あるいはタグを持たないPublishedアノテーションを付与された
      * クラス・コンストラクタ・メソッド・フィールド（内部クラスを含む）の一覧を返却する。
      *
-     * @param classDoc クラスの構造情報
+     * @param typeElement クラスの構造情報
      * @return クラス内で、指定されたタグを持つかあるいはタグを持たないPublishedアノテーションを付与された一覧
      */
-    List<String> generateForClassElements(ClassDoc classDoc) {
-        List<String> result = new ArrayList<String>();
-        if (collector.hasPublishedAnnotation(classDoc)) {
-            result.add(classDoc.qualifiedTypeName());
+    List<String> generateForClassElements(TypeElement typeElement) {
+        List<String> result = new ArrayList<>();
+        if (collector.hasPublishedAnnotation(typeElement)) {
+            result.add(typeElement.getQualifiedName().toString());
         } else {
-            for (ConstructorDoc constructor : classDoc.constructors()) {
+            Name simpleClassName = typeElement.getSimpleName();
+            Name qualifiedClassName = typeElement.getQualifiedName();
+            
+            for (ExecutableElement constructor : obtainConstructorElement(typeElement)) {
                 if (collector.hasPublishedAnnotation(constructor)) {
-                    result.add(constructor.qualifiedName() + "." + constructor.name() + deleteGenerics(constructor.signature()));
+                    result.add(qualifiedClassName + "." + simpleClassName + deleteGenerics(buildMethodArgsSignature(constructor)));
                 }
             }
 
-            for (MethodDoc method : classDoc.methods()) {
+            for (ExecutableElement method : obtainMethodElement(typeElement)) {
                 if (collector.hasPublishedAnnotation(method)) {
-                    result.add(method.qualifiedName() + deleteGenerics(method.signature()));
+                    Name methodName = method.getSimpleName();
+                    result.add(qualifiedClassName + "." + methodName + deleteGenerics(buildMethodArgsSignature(method)));
                 }
             }
 
-            for (FieldDoc field : classDoc.fields()) {
+            for (VariableElement field : obtainFieldElement(typeElement)) {
                 if (collector.hasPublishedAnnotation(field)) {
-                    result.add(field.qualifiedName());
+                    result.add(qualifiedClassName + "." + field.getSimpleName());
                 }
             }
 
-            for (ClassDoc innerClazz : classDoc.innerClasses()) {
+            for (TypeElement innerClazz : obtainInnerClassElement(typeElement)) {
                 result.addAll(generateForClassElements(innerClazz));
             }
         }
         return result;
+    }
+
+    /**
+     * 指定された型要素に含まれるコンストラクタ要素を取得する。
+     * @param typeElement 型要素
+     * @return コンストラクタ要素
+     */
+    private List<ExecutableElement> obtainConstructorElement(TypeElement typeElement) {
+        return ElementFilter.constructorsIn(typeElement.getEnclosedElements());
+    }
+
+    /**
+     * 指定された型要素に含まれるメソッド要素を取得する。
+     * @param typeElement 型要素
+     * @return メソッド要素
+     */
+    private List<ExecutableElement> obtainMethodElement(TypeElement typeElement) {
+        return ElementFilter.methodsIn(typeElement.getEnclosedElements());
+    }
+
+    /**
+     * 指定された型要素に含まれるフィールド要素を取得する。
+     * @param typeElement 型要素
+     * @return フィールド要素
+     */
+    private List<VariableElement> obtainFieldElement(TypeElement typeElement) {
+        return ElementFilter.fieldsIn(typeElement.getEnclosedElements());
+    }
+
+    /**
+     * 指定された型要素に含まれる内部クラスの型要素を取得する。
+     * @param typeElement 型要素
+     * @return 内部クラスの型要素
+     */
+    private List<TypeElement> obtainInnerClassElement(TypeElement typeElement) {
+        return ElementFilter.typesIn(typeElement.getEnclosedElements());
+    }
+
+    /**
+     * メソッドやコンストラクタの引数のシグネチャ文字列を生成する。
+     * @param element メソッドまたはコンストラクタ要素
+     * @return 引数部分のシグネチャ
+     */
+    private String buildMethodArgsSignature(ExecutableElement element) {
+        String parameters = element.getParameters().stream()
+                .map(VariableElement::asType)
+                .map(TypeMirror::toString)
+                .collect(Collectors.joining(", "));
+        return "(" + parameters + ")";
     }
 
     /**
