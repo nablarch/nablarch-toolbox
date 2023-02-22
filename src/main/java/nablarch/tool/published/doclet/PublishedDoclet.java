@@ -6,7 +6,7 @@ import jdk.javadoc.doclet.StandardDoclet;
 
 import javax.lang.model.SourceVersion;
 import javax.tools.Diagnostic;
-import java.util.HashSet;
+import java.util.LinkedHashSet;
 import java.util.Locale;
 import java.util.Set;
 
@@ -47,9 +47,14 @@ public final class PublishedDoclet extends StandardDoclet {
 
     @Override
     public Set<? extends Option> getSupportedOptions() {
-        HashSet<Option> supported = new HashSet<>(super.getSupportedOptions());
-        supported.addAll(this.options.getSupportedOptions());
-        return supported;
+        // 標準ドックレットにも -tag というオプションが存在し
+        // そちらが先に処理されると本ドックレットの -tag オプションが無視されることがある。
+        // このため、 LinkedHashSet で順序を保障することで確実に -tag オプションが処理されるようにしている。
+        // なお maven-javadoc-pluginから実行されたときに標準ドックレットのオプションがいくつか
+        // 強制的に渡されるため、標準ドックレットのオプションを除外することはできない。
+        Set<Option> supportedOptions = new LinkedHashSet<>(this.options.getSupportedOptions());
+        supportedOptions.addAll(super.getSupportedOptions());
+        return supportedOptions;
     }
 
     @Override
