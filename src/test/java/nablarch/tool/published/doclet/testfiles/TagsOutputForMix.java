@@ -1,7 +1,6 @@
 package nablarch.tool.published.doclet.testfiles;
 
 import nablarch.core.util.annotation.Published;
-import nablarch.tool.published.doclet.testfiles.unpublshedpkg.UnPubSub;
 
 /**
  * タグの動作確認。<br />
